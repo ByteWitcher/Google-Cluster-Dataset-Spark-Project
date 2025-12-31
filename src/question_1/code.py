@@ -12,12 +12,13 @@ from pyspark import SparkContext
 
 # For each line of the input file, return a tuple (time, machine ID, event type, CPUs)
 def parseLine(line):
-    splitLine = line.split(',')
+    # Split the line by commas and strip whitespace
+    splitLine = [x.strip() for x in line.split(',')]
 
     # Skip rows with missing CPU value
-    if len(splitLine) < 6 or splitLine[4] == '':
+    if splitLine[4] == '':
         return None
-    
+  
     return (
         int(splitLine[0]),
         int(splitLine[1]),
@@ -27,7 +28,7 @@ def parseLine(line):
 
 #### Driver program
 
-# Start spark with 1 worker thread
+# Start spark 
 sc = SparkContext("local[*]")
 sc.setLogLevel("ERROR")
 

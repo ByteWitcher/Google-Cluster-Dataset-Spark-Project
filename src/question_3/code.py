@@ -1,3 +1,5 @@
+import os
+import matplotlib.pyplot as plt
 from pyspark import SparkContext
 
 # Machine Events
@@ -16,7 +18,7 @@ def parseLine(line):
     # Skip rows with missing CPU value
     if splitLine[4] == '':
         return None
-    
+
     return (
         int(splitLine[0]),
         int(splitLine[1]),
@@ -38,7 +40,7 @@ def compute_lost_cpu_time(events):
             lost += cpu_capacity * (time - last_remove_time)
             last_remove_time = None
 
-    return lost
+    return (cpu_capacity,lost)
 
 #### Driver program
 
@@ -58,22 +60,32 @@ events_by_machine = parsed_events.map(lambda x: (x[1], (x[0], x[2], x[3]))).grou
 # Sort events for each machine ID by time
 sorted_events_by_machine = events_by_machine.mapValues(lambda evts: sorted(evts, key=lambda x: x[0]))
 
+# Compute lost CPU time for each machine
+lost_cpu_time_by_machine = sorted_events_by_machine.mapValues(compute_lost_cpu_time)
+
 # Total lost CPU time across all machines
-total_lost_cpu_time = sorted_events_by_machine.mapValues(compute_lost_cpu_time).map(lambda x: x[1]).sum()
+total_lost_cpu_time = lost_cpu_time_by_machine.map(lambda x: x[1][1]).sum()
 
-# Find the end time of the trace
-trace_end_time = parsed_events.map(lambda x: x[0]).max()
+# Compute percentage of lost CPU time by CPU capacity
+lost_cpu_time_by_cpu_capacity = lost_cpu_time_by_machine.map(lambda x: x[1]).reduceByKey(lambda x,y: x+y).map(lambda x: (x[0],(x[1]/total_lost_cpu_time)*100)).sortByKey().collect()
 
-# Compute total CPU time available in the cluster
-def compute_total_cpu_time(events):
-    for time, event, cpu in events:
-        if event == 0:  # first ADD
-            return cpu * (trace_end_time - time)
-    return 0.0
+cpu_values = [x[0] for x in lost_cpu_time_by_cpu_capacity]
+lost_percentages = [x[1] for x in lost_cpu_time_by_cpu_capacity]
 
-# Total CPU time across all machines
-total_cpu_time = sorted_events_by_machine.mapValues(compute_total_cpu_time).map(lambda x: x[1]).sum()
+# Create directory if it does not exist
+os.makedirs("./src/question_3/plots", exist_ok=True)
 
-# Compute percentage of computational power lost due to maintenance
-percentage_lost = (total_lost_cpu_time / total_cpu_time) * 100
-print(f"Percentage of computational power lost due to maintenance: {percentage_lost:.2f}%")
+# Plot results 
+x_pos = range(len(cpu_values))
+
+plt.figure(figsize=(8, 5))
+plt.bar(x_pos, lost_percentages, width=0.6)
+
+plt.xticks(x_pos, cpu_values)
+plt.xlabel("CPU capacity (normalized)")
+plt.ylabel("Lost CPU Time (%)")
+plt.title("Percentage of Lost CPU Time by CPU Capacity")
+
+plt.grid(axis='y', linestyle='--', alpha=0.6)
+plt.tight_layout()
+plt.savefig("./src/question_3/plots/lost_cpu_time_percentage.png", dpi=300)
