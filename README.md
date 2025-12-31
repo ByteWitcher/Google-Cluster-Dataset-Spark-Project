@@ -15,3 +15,11 @@ Data Subset: 180 - 184
   - part-00182-of-00500.csv.gz
   - part-00183-of-00500.csv.gz
   - part-00184-of-00500.csv.gz
+
+# Anaylsis 1
+
+Distribution of the machines according to their CPU capacity :
+
+For this analysis there is one single file, about the whole Google Cell so we executed the code on the full Dataset.
+
+Based on the google documentation there are 3 types of machine events; ADD, REMOVE and UPDATE, naturally we should ignore the REMOVE events since a prior record concerning the machine would indicate the same resources,and since a machine can start with a certain capacity and get updated later, then for each machine we should only keep the latest record either an ADD (because it could get removed earlier and added again, a restart) or UPDATE, by comparing their timestamps and finally when we have all the needed records, we would group them by their CPUs field, and plot the result.

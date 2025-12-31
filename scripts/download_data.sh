@@ -7,6 +7,9 @@ mkdir -p data/job_events
 mkdir -p data/task_events
 mkdir -p data/task_usage
 
+# Download the schema file
+gsutil cp gs://clusterdata-2011-2/schema.csv data/
+
 # Download our parts of the dataset from Google Cloud Storage (from 180 to 184)
 gsutil cp gs://clusterdata-2011-2/machine_events/part-00000-of-00001.csv.gz data/machine_events
 
