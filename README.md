@@ -1,25 +1,19 @@
 # Google-Cluster-Dataset-Spark-Project
 
-Soufiane ABAHAMID
-Mohamed Quehlaoui
-Team: AK
-Data Subset: 180 - 184
+- By: Soufiane ABAHAMID - Mohamed Quehlaoui
+- Team: AK
+- Data Subset: 180 - 184
 
-# Notes
+# Anaylsis 1: Distribution of Machine CPU Capacities
 
-- The very first thing we did was install pyenv, since gsutil requires version 3.13 , and all we had was 3.12.
-- After that we installed the python 3.13 version and gsutil
-- Then we downloaded our parts from `e` - ``:
-  - part-00180-of-00500.csv.gz
-  - part-00181-of-00500.csv.gz
-  - part-00182-of-00500.csv.gz
-  - part-00183-of-00500.csv.gz
-  - part-00184-of-00500.csv.gz
+To better understand the hardware heterogeneity of the cluster, we first analyzed the distribution of CPU capacities across all machines. The data was extracted from the **machine events** table, which provides information about each machine’s available resources over time. For each machine, we retained only the most recent event (the one with the latest timestamp) in order to represent its final known configuration during the trace period. Machine events corresponding to removal events were excluded from the analysis.
 
-# Anaylsis 1
+The CPU capacity values in the dataset are normalized, meaning that a value of 1.0 corresponds to the machine with the highest number of CPU cores in the cluster. Lower values represent machines with proportionally fewer cores (according to the google's documentation).
 
-Distribution of the machines according to their CPU capacity :
+![Alt text describing the image](src/question_1/plots/cpu_capacity_distribution.png)
 
-For this analysis there is one single file, about the whole Google Cell so we executed the code on the full Dataset.
+_Figure 1: Distribution of Machine CPU Capacities._
 
-Based on the google documentation there are 3 types of machine events; ADD, REMOVE and UPDATE, naturally we should ignore the REMOVE events since a prior record concerning the machine would indicate the same resources,and since a machine can start with a certain capacity and get updated later, then for each machine we should only keep the latest record either an ADD (because it could get removed earlier and added again, a restart) or UPDATE, by comparing their timestamps and finally when we have all the needed records, we would group them by their CPUs field, and plot the result.
+The results indicate that the majority of machines have a normalized CPU capacity of 0.5, suggesting a strong hardware homogeneity in the cluster. A smaller number of machines have higher capacities (around 1.0), which likely correspond to more powerful nodes intended for heavier workloads. Conversely, a very small fraction of machines have low CPU capacity (around 0.25), possibly representing older or specialized machines.
+
+Overall, this distribution suggests that the cluster is largely composed of mid-range machines, with limited hardware heterogeneity. This design likely simplifies scheduling decisions and helps ensure predictable performance across tasks, while still allowing some flexibility through the presence of higher-capacity nodes.
