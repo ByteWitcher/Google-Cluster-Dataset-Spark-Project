@@ -11,13 +11,13 @@
 
 To better understand the hardware heterogeneity of the cluster, we first analyzed the distribution of CPU capacities across all machines. The data was extracted from the _machine_events_ table, which provides information about each machine’s available resources over time. For each machine, we retained only the most recent event (the one with the latest timestamp) in order to represent its final known configuration during the trace period. Machine events corresponding to removal events were excluded from the analysis.
 
-The CPU capacity values in the dataset are normalized, meaning that a value of 1.0 corresponds to the machine with the highest number of CPU cores in the cluster. Lower values represent machines with proportionally fewer cores (according to the google's documentation).
+The CPU capacity values in the dataset are normalized, meaning that a value of **1.0** corresponds to the machine with the highest number of CPU cores in the cluster. Lower values represent machines with proportionally fewer cores (according to the google's documentation).
 
 ![Alt text describing the image](src/question_1/plots/cpu_capacity_distribution.png)
 
 _Figure 1: Distribution of Machine CPU Capacities._
 
-The results indicate that the majority of machines have a normalized CPU capacity of 0.5, suggesting a strong hardware homogeneity in the cluster. A smaller number of machines have higher capacities (around 1.0), which likely correspond to more powerful nodes intended for heavier workloads. Conversely, a very small fraction of machines have low CPU capacity (around 0.25), possibly representing older or specialized machines.
+The results indicate that the majority of machines have a normalized CPU capacity of **0.5**, suggesting a strong hardware homogeneity in the cluster. A smaller number of machines have higher capacities (around **1.0**), which likely correspond to more powerful nodes intended for heavier workloads. Conversely, a very small fraction of machines have low CPU capacity (around **0.25**), possibly representing older or specialized machines.
 
 Overall, this distribution suggests that the cluster is largely composed of mid-range machines, with limited hardware heterogeneity. This design likely simplifies scheduling decisions and helps ensure predictable performance across tasks, while still allowing some flexibility through the presence of higher-capacity nodes.
 
@@ -82,6 +82,27 @@ To compare maintenance impact across CPU classes, we aggregated the lost CPU tim
 
 _Figure 2: Percentage of lost CPU time by CPU capacity._
 
-The results show that machines with a normalized CPU capacity of **0.5** account for the vast majority of the lost CPU time (over 90%). Machines with higher CPU capacity (1.0) contribute a much smaller fraction, while low-capacity machines (0.25) contribute only marginally.
+The results show that machines with a normalized CPU capacity of **0.5** account for the vast majority of the lost CPU time (over **90%**). Machines with higher CPU capacity (**1.0**) contribute a much smaller fraction, while low-capacity machines (**0.25**) contribute only marginally.
 
-This observation is largely explained by the distribution of machines in the cluster: as shown in Analysis 1, most machines belong to the 0.5 CPU capacity class. Therefore, even if maintenance events are uniformly distributed, this class naturally contributes more to the total lost CPU time. There is no strong evidence suggesting that higher-capacity machines experience a disproportionately higher maintenance rate compared to others.
+This observation is largely explained by the distribution of machines in the cluster: as shown in Analysis 1, most machines belong to the **0.5** CPU capacity class. Therefore, even if maintenance events are uniformly distributed, this class naturally contributes more to the total lost CPU time. There is no strong evidence suggesting that higher-capacity machines experience a disproportionately higher maintenance rate compared to others.
+
+# Analysis 4: Distribution of Jobs and Tasks per Scheduling Class
+
+**Datasets used:** _job_events_ and _task_events_  
+**Execution scope:** data subset (parts 180–184)
+
+In this analysis, we study how jobs and tasks are distributed across the different **scheduling classes** defined in the Google cluster traces. The scheduling class ranges from **0 to 3** and represents how **latency-sensitive** a job or task is. It is important to note that the scheduling class is distinct from the task priority: while the scheduling class influences resource access policies at the machine level, the priority determines scheduling and eviction decisions.
+
+We used two datasets for this analysis: the _job_events_ table and the _task_events_ table. For both datasets, the analysis was restricted to our assigned data subset (parts 180–184). For jobs, each distinct job ID was associated with its scheduling class. For tasks, we considered distinct pairs of job ID and task index along with their scheduling class.
+
+For each scheduling class, we computed the percentage of jobs and the percentage of tasks relative to their respective totals.
+
+![Jobs vs Tasks per scheduling class](src/question_4/plots/jobs_vs_tasks_per_class.png)
+
+_Figure 4: Percentage of jobs and tasks per scheduling class._
+
+The results show a clear imbalance between the distribution of jobs and tasks across scheduling classes. Scheduling class **0**, which corresponds to the least latency-sensitive workloads, accounts for a moderate fraction of jobs but an overwhelming majority of tasks. This suggests that many jobs in this class are composed of a large number of tasks.
+
+In contrast, scheduling classes **1** and **2** represent a comparable fraction of jobs but a much smaller fraction of tasks, indicating that these jobs tend to consist of fewer tasks. This behavior is consistent with workloads that are more latency-sensitive and less massively parallel. Scheduling class **3** represents only a very small fraction of both jobs and tasks, showing that highly latency-sensitive workloads are relatively rare in the cluster.
+
+Overall, this analysis highlights strong structural differences between scheduling classes: jobs belonging to the lowest scheduling class (class 0) dominate the cluster in terms of task volume, while higher scheduling classes are associated with smaller, more latency-sensitive workloads.
