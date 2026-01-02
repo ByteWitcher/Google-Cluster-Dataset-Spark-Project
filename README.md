@@ -106,3 +106,26 @@ The results show a clear imbalance between the distribution of jobs and tasks ac
 In contrast, scheduling classes **1** and **2** represent a comparable fraction of jobs but a much smaller fraction of tasks, indicating that these jobs tend to consist of fewer tasks. This behavior is consistent with workloads that are more latency-sensitive and less massively parallel. Scheduling class **3** represents only a very small fraction of both jobs and tasks, showing that highly latency-sensitive workloads are relatively rare in the cluster.
 
 Overall, this analysis highlights strong structural differences between scheduling classes: jobs belonging to the lowest scheduling class (class 0) dominate the cluster in terms of task volume, while higher scheduling classes are associated with smaller, more latency-sensitive workloads.
+
+# Analysis 5: Percentage of Jobs and Tasks that Were Evicted or Killed
+
+**Datasets used:** _job_events_ and _task_events_  
+**Execution scope:** data subset (parts 180–184)
+
+In this analysis, we aim to determine whether the proportion of jobs and tasks that were **evicted or killed** during execution can be considered significant. Eviction events typically occur when resources are reclaimed by the scheduler, while kill events usually correspond to explicit cancellations or failures that prevent normal completion.
+
+We used the _job_events_ and _task_events_ tables, restricting the analysis to our assigned data subset (parts 180–184). For jobs, we identified each unique job ID and checked whether it experienced at least one **EVICT** or **KILL** event during its lifecycle. Similarly, for tasks, we considered unique task identifiers defined by the pair (job ID, task index) and checked for eviction or kill events.
+
+The results obtained are summarized below:
+
+- **Total unique jobs:** 7,413
+
+- **Jobs evicted or killed:** 3,065 (**41.35%**)
+
+- **Total unique tasks:** 333,469
+
+- **Tasks evicted or killed:** 126,052 (**37.80%**)
+
+These results show that a substantial fraction of both jobs and tasks did not complete normally. More than 40% of jobs and nearly 38% of tasks experienced at least one eviction or kill event during their execution. This suggests that eviction and termination events are a common occurrence in the cluster, rather than exceptional cases.
+
+It is important to note that this analysis was conducted on a restricted **subset of the data** (parts 180–184). As a result, the observed proportions of evicted and killed jobs and tasks may be influenced by the specific workload present in this time window.
