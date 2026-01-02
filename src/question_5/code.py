@@ -59,7 +59,7 @@ sc.setLogLevel("ERROR")
 job_events = sc.textFile("./data/job_events/part-0018*-of-00500.csv")
 task_events = sc.textFile("./data/task_events/part-0018*-of-00500.csv")
 
-# Parse each line)
+# Parse each line
 parsed_job_events = (
     job_events.map(parseJobLine).filter(lambda x: x is not None).distinct()
 )

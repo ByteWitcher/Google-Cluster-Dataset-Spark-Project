@@ -70,7 +70,7 @@ sc.setLogLevel("ERROR")
 job_events = sc.textFile("./data/job_events/part-0018*-of-00500.csv")
 task_events = sc.textFile("./data/task_events/part-0018*-of-00500.csv")
 
-# Parse each line)
+# Parse each line
 parsed_job_events = (
     job_events.map(parseJobLine).filter(lambda x: x is not None).distinct()
 )
@@ -79,28 +79,28 @@ parsed_task_events = (
 )
 
 # Count the number of jobs for each scheduling class
-job_scheduling_class_counts = parsed_job_events.map(lambda x: (x[1], 1)).reduceByKey(
+job_count_per_scheduling_class = parsed_job_events.map(lambda x: (x[1], 1)).reduceByKey(
     lambda x, y: x + y
 )
-total_jobs = job_scheduling_class_counts.map(lambda x: x[1]).sum()
-job_scheduling_class_counts = job_scheduling_class_counts.mapValues(
+total_jobs = job_count_per_scheduling_class.map(lambda x: x[1]).sum()
+job_count_per_scheduling_class = job_count_per_scheduling_class.mapValues(
     lambda x: (x / total_jobs) * 100
 )
 
-job_results = job_scheduling_class_counts.sortByKey().collect()
+job_results = job_count_per_scheduling_class.sortByKey().collect()
 scheduling_classes = [x[0] for x in job_results]
 job_percentages = [x[1] for x in job_results]
 
 # Count the number of tasks for each scheduling class
-task_scheduling_class_counts = parsed_task_events.map(lambda x: (x[2], 1)).reduceByKey(
+task_count_per_scheduling_class = parsed_task_events.map(lambda x: (x[2], 1)).reduceByKey(
     lambda x, y: x + y
 )
-total_tasks = task_scheduling_class_counts.map(lambda x: x[1]).sum()
-task_scheduling_class_counts = task_scheduling_class_counts.mapValues(
+total_tasks = task_count_per_scheduling_class.map(lambda x: x[1]).sum()
+task_count_per_scheduling_class = task_count_per_scheduling_class.mapValues(
     lambda x: (x / total_tasks) * 100
 )
 
-task_results = task_scheduling_class_counts.sortByKey().collect()
+task_results = task_count_per_scheduling_class.sortByKey().collect()
 task_percentages = [x[1] for x in task_results]
 
 # Create directory if it does not exist

@@ -120,12 +120,43 @@ The results obtained are summarized below:
 
 - **Total unique jobs:** 7,413
 
-- **Jobs evicted or killed:** 3,065 (**41.35%**)
+- **Jobs evicted or killed:** 3,065 (41.35%)
 
 - **Total unique tasks:** 333,469
 
-- **Tasks evicted or killed:** 126,052 (**37.80%**)
+- **Tasks evicted or killed:** 126,052 (37.80%)
 
 These results show that a substantial fraction of both jobs and tasks did not complete normally. More than 40% of jobs and nearly 38% of tasks experienced at least one eviction or kill event during their execution. This suggests that eviction and termination events are a common occurrence in the cluster, rather than exceptional cases.
 
 It is important to note that this analysis was conducted on a restricted **subset of the data** (parts 180–184). As a result, the observed proportions of evicted and killed jobs and tasks may be influenced by the specific workload present in this time window.
+
+# Analysis 6: Eviction Probability of Tasks by Scheduling Class
+
+**Dataset used:** _task_events_  
+**Execution scope:** data subset (parts 180–184)
+
+In this analysis, we investigate whether tasks belonging to lower scheduling classes have a higher probability of being evicted. As defined in the Google cluster documentation, the **scheduling class** (ranging from 0 to 3) represents how latency-sensitive a task is, and it is distinct from the task priority, which directly influences scheduling and eviction decisions.
+
+We used the _task_events_ table. Each task was uniquely identified by the pair (job ID, task index). For each scheduling class, we computed:
+
+- the total number of distinct tasks
+- the number of distinct tasks that experienced at least one **EVICT** event.
+
+The eviction probability for a given scheduling class was then computed as:
+
+```math
+\text{Eviction Probability} =
+\frac{\text{Number of evicted tasks}}{\text{Total number of tasks}}
+\times 100
+```
+
+The results obtained are as follows:
+
+- **Scheduling class 0:** 15.57%
+- **Scheduling class 1:** 18.01%
+- **Scheduling class 2:** 8.89%
+- **Scheduling class 3:** 48.55%
+
+These results show that tasks in **scheduling class 3** have a significantly higher eviction probability than tasks in other classes. This observation may appear counterintuitive, as scheduling class 3 corresponds to the most latency-sensitive workloads. However, this behavior can be explained by the fact that scheduling class alone does not determine eviction decisions. Task **priority** play a major role in eviction events.
+
+For scheduling classes 0, 1, and 2, eviction probabilities remain below 20%, with class 2 showing the lowest eviction rate. This suggests that lower scheduling classes do not necessarily suffer from systematically higher eviction probabilities within this subset.
