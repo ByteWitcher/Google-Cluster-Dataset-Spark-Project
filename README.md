@@ -99,7 +99,7 @@ For each scheduling class, we computed the percentage of jobs and the percentage
 
 ![Jobs vs Tasks per scheduling class](src/question_4/plots/jobs_vs_tasks_per_class.png)
 
-_Figure 4: Percentage of jobs and tasks per scheduling class._
+_Figure 3: Percentage of jobs and tasks per scheduling class._
 
 The results show a clear imbalance between the distribution of jobs and tasks across scheduling classes. Scheduling class **0**, which corresponds to the least latency-sensitive workloads, accounts for a moderate fraction of jobs but an overwhelming majority of tasks. This suggests that many jobs in this class are composed of a large number of tasks.
 
@@ -174,7 +174,7 @@ For each job, we counted the number of **distinct machines** on which its tasks 
 
 ![Task locality: machines used per job](src/question_7/plots/machines_per_job.png)
 
-_Figure 7: Distribution of the number of distinct machines used per job (logarithmic scale)._
+_Figure 4: Distribution of the number of distinct machines used per job (logarithmic scale)._
 
 The results show a **highly skewed (heavy-tailed)** distribution. A large number of jobs are scheduled on a **small number of machines**, often just one or a few, which suggests that the scheduler tends to preserve locality for many jobs. This behavior is beneficial for workloads that repeatedly access the same data or benefit from cache reuse.
 
@@ -195,8 +195,27 @@ Each task was uniquely identified by the pair (job ID, task index). For each tas
 
 ![Requested CPU vs Actual CPU Usage per Task](src/question_8/plots/cpu_request_vs_usage.png)
 
-_Figure 8: Requested CPU versus mean actual CPU usage per task._
+_Figure 5: Requested CPU versus mean actual CPU usage per task._
 
 The scatter plot reveals a **weak correlation** between requested CPU and actual CPU usage. Many tasks request a non-negligible amount of CPU but exhibit very low average CPU usage, indicating systematic **overestimation of resource requirements**. Conversely, a small number of tasks consume significantly more CPU than average, even when their requested CPU is relatively modest.
 
 Overall, this analysis shows that tasks requesting more resources are **not necessarily** the ones that consume more resources in practice. This mismatch between requested and actual usage highlights the challenges of resource estimation in large-scale cluster environments and justifies the scheduler’s reliance on dynamic resource sharing and overcommitment.
+
+# Analysis 9: Relationship Between CPU Usage Peaks and Task Evictions
+
+**Datasets used:** _task_events_ and _task_usage_  
+**Execution scope:** data subset (parts 180–184)
+
+In this analysis, we investigate whether high CPU usage on machines is associated with an increased number of task eviction events. The goal is to determine whether peaks in resource consumption may lead to task evictions, which would indicate resource contention or overcommitment at the machine level.
+
+We used two datasets for this analysis. From the _task_events_ table, we extracted **EVICT** events and counted, for each machine, the total number of task evictions it experienced. From the _task_usage_ table, we computed the **mean CPU usage per machine** by averaging the CPU usage rates observed across all task usage records for that machine.
+
+We then joined these two metrics by machine ID, obtaining for each machine a pair consisting of its mean CPU usage and its number of eviction events. These values were visualized using a scatter plot.
+
+![CPU usage vs task evictions per machine](src/question_9/plots/cpu_vs_evictions.png)
+
+_Figure 6: Mean CPU usage versus number of task eviction events per machine._
+
+The scatter plot does not reveal a strong positive correlation between mean CPU usage and the number of eviction events. While some machines with relatively low average CPU usage experience a high number of evictions, machines with higher average CPU usage do not consistently exhibit more eviction events. In fact, eviction events appear to be spread across a wide range of CPU usage levels.
+
+This suggests that **average CPU usage alone is not a sufficient indicator** of eviction likelihood. Evictions are likely influenced by more complex factors such as short-lived CPU spikes, memory pressure, task priorities, and scheduling decisions related to overcommitment. Since we rely on mean CPU usage, transient peaks that may trigger evictions are not fully captured by this metric.
