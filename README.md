@@ -160,3 +160,26 @@ The results obtained are as follows:
 These results show that tasks in **scheduling class 3** have a significantly higher eviction probability than tasks in other classes. This observation may appear counterintuitive, as scheduling class 3 corresponds to the most latency-sensitive workloads. However, this behavior can be explained by the fact that scheduling class alone does not determine eviction decisions. Task **priority** play a major role in eviction events.
 
 For scheduling classes 0, 1, and 2, eviction probabilities remain below 20%, with class 2 showing the lowest eviction rate. This suggests that lower scheduling classes do not necessarily suffer from systematically higher eviction probabilities within this subset.
+
+# Analysis 7: Task Locality
+
+**Dataset used:** _task_events_  
+**Execution scope:** data subset (parts 180–184)
+
+In this analysis, we investigate whether tasks belonging to the same job tend to run on the same machine, which provides insight into the **locality strategy** adopted by the cluster scheduler. High locality can improve performance by reducing data movement and cache misses, while low locality may improve load balancing and fault tolerance.
+
+We focused exclusively on **SCHEDULE** events, as they indicate the actual placement of tasks on machines. Each task was uniquely identified by the pair (job ID, task index).
+
+For each job, we counted the number of **distinct machines** on which its tasks were scheduled. We then computed the distribution of jobs according to this number, i.e., how many jobs ran on 1 machine, 2 machines, and so on.
+
+![Task locality: machines used per job](src/question_7/plots/machines_per_job.png)
+
+_Figure 7: Distribution of the number of distinct machines used per job (logarithmic scale)._
+
+The results show a **highly skewed (heavy-tailed)** distribution. A large number of jobs are scheduled on a **small number of machines**, often just one or a few, which suggests that the scheduler tends to preserve locality for many jobs. This behavior is beneficial for workloads that repeatedly access the same data or benefit from cache reuse.
+
+At the same time, a small number of jobs are spread across **hundreds or even thousands of machines**. These jobs are likely large-scale, highly parallel workloads that prioritize throughput and load balancing over locality.
+
+Overall, this analysis indicates that the cluster scheduler adopts a **hybrid locality strategy**. For smaller or less parallel jobs, it favors task locality by limiting the number of machines involved. For large-scale jobs, it sacrifices locality in favor of parallelism and scalability.
+
+s
