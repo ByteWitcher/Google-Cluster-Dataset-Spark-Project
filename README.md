@@ -182,4 +182,21 @@ At the same time, a small number of jobs are spread across **hundreds or even th
 
 Overall, this analysis indicates that the cluster scheduler adopts a **hybrid locality strategy**. For smaller or less parallel jobs, it favors task locality by limiting the number of machines involved. For large-scale jobs, it sacrifices locality in favor of parallelism and scalability.
 
-s
+# Analysis 8: Relationship Between Requested and Actual CPU Usage
+
+**Datasets used:** _task_events_ and _task_usage_  
+**Execution scope:** data subset (parts 180–184)
+
+In this analysis, we investigate whether tasks that request more CPU resources are also the ones that actually consume more CPU during execution. Understanding this relationship is important for evaluating the accuracy of user resource requests and the effectiveness of the cluster’s resource allocation strategy.
+
+We used two datasets for this analysis: the _task_events_ table to extract CPU resource requests, and the _task_usage_ table to measure actual CPU consumption.
+
+Each task was uniquely identified by the pair (job ID, task index). For each task, we retained the **maximum CPU request** observed in the task events and computed the **mean CPU usage** over all available usage records. We then joined these two values to compare requested versus consumed CPU for each task.
+
+![Requested CPU vs Actual CPU Usage per Task](src/question_8/plots/cpu_request_vs_usage.png)
+
+_Figure 8: Requested CPU versus mean actual CPU usage per task._
+
+The scatter plot reveals a **weak correlation** between requested CPU and actual CPU usage. Many tasks request a non-negligible amount of CPU but exhibit very low average CPU usage, indicating systematic **overestimation of resource requirements**. Conversely, a small number of tasks consume significantly more CPU than average, even when their requested CPU is relatively modest.
+
+Overall, this analysis shows that tasks requesting more resources are **not necessarily** the ones that consume more resources in practice. This mismatch between requested and actual usage highlights the challenges of resource estimation in large-scale cluster environments and justifies the scheduler’s reliance on dynamic resource sharing and overcommitment.

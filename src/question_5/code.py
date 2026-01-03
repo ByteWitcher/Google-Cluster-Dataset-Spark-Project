@@ -27,7 +27,7 @@ from pyspark import SparkContext
 
 
 # For each line of the input file, return a tuple (job ID, event type)
-def parseJobLine(line):
+def parseJobEventLine(line):
     # Split the line by commas and strip whitespace
     splitLine = [x.strip() for x in line.split(",")]
 
@@ -38,7 +38,7 @@ def parseJobLine(line):
 
 
 # For each line of the input file, return a tuple (job ID, task index, event type)
-def parseTaskLine(line):
+def parseTaskEventLine(line):
     # Split the line by commas and strip whitespace
     splitLine = [x.strip() for x in line.split(",")]
 
@@ -61,7 +61,7 @@ task_events = sc.textFile("./data/task_events/part-0018*-of-00500.csv")
 
 # Parse each line
 parsed_job_events = (
-    job_events.map(parseJobLine).filter(lambda x: x is not None).distinct()
+    job_events.map(parseJobEventLine).filter(lambda x: x is not None).distinct()
 )
 parsed_task_events = (
     task_events.map(parseTaskLine).filter(lambda x: x is not None).distinct()
