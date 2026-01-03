@@ -278,3 +278,52 @@ Using this method, we obtained:
 This means that machines are over-committed for approximately **0.034% of the time**, indicating that CPU overcommitment is a **very rare event** in the observed data.
 
 This result suggests that the cluster scheduler adopts a conservative approach with respect to CPU allocation, likely relying on task eviction, priority handling, and dynamic resource sharing to manage contention rather than allowing sustained overcommitment.
+
+# Analysis 11 (Original): CPU Request Overestimation by Scheduling Class
+
+**Datasets used:** _task_events_ and _task_usage_  
+**Execution scope:** data subset (parts 180–184)
+
+In this analysis, we investigate whether CPU request overestimation varies across **scheduling classes**. While previous analyses showed a general mismatch between requested and actual CPU usage, this analysis focuses on whether this behavior depends on how latency-sensitive tasks are, as captured by their scheduling class.
+
+For each task $t$, we define a **CPU overestimation ratio** as:
+
+```math
+\text{OverestimationRatio}_t =
+\frac{R_t}{U_t}
+```
+
+where:
+
+- $R_t$ is the **maximum CPU requested** by task $t$,
+- $U_t$ is the **mean CPU usage** of task $t$ over its execution.
+
+Tasks with zero mean CPU usage were excluded, and extreme outliers were filtered to avoid bias from pathological cases.
+
+For each scheduling class $s \in {0,1,2,3}$, we computed the average overestimation ratio:
+
+```math
+\text{AvgOverestimation}_s =
+\frac{1}{|T_s|}
+\sum_{t \in T_s}
+\text{OverestimationRatio}_t
+```
+
+where $T_s$ is the set of tasks belonging to scheduling class $s$.
+
+The average CPU overestimation ratios obtained are:
+
+- **Scheduling class 0:** 6.50×
+- **Scheduling class 1:** 5.56×
+- **Scheduling class 2:** 6.97×
+- **Scheduling class 3:** 10.05×
+
+![CPU Request Overestimation by Scheduling Class](src/question_11/plots/cpu_overestimation_by_class.png)
+
+_Figure 7: Average CPU request overestimation ratio per scheduling class._
+
+The results show that **CPU overestimation is present across all scheduling classes**, but it is particularly pronounced for **scheduling class 3**, which corresponds to the most latency-sensitive workloads. On average, tasks in this class request **about ten times more CPU** than they actually use.
+
+This behavior may seem counterintuitive, but it can be explained by the need for latency-sensitive tasks to provision resources conservatively in order to avoid performance degradation during demand spikes. Over-requesting CPU provides headroom and reduces the risk of contention, even if average utilization remains low.
+
+Lower scheduling classes also exhibit significant overestimation, although to a lesser extent. This suggests that resource overestimation is a common practice across workloads.
