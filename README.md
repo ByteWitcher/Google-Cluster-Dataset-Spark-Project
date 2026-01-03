@@ -219,3 +219,62 @@ _Figure 6: Mean CPU usage versus number of task eviction events per machine._
 The scatter plot does not reveal a strong positive correlation between mean CPU usage and the number of eviction events. While some machines with relatively low average CPU usage experience a high number of evictions, machines with higher average CPU usage do not consistently exhibit more eviction events. In fact, eviction events appear to be spread across a wide range of CPU usage levels.
 
 This suggests that **average CPU usage alone is not a sufficient indicator** of eviction likelihood. Evictions are likely influenced by more complex factors such as short-lived CPU spikes, memory pressure, task priorities, and scheduling decisions related to overcommitment. Since we rely on mean CPU usage, transient peaks that may trigger evictions are not fully captured by this metric.
+
+# Analysis 10: Frequency of Machine Resource Overcommitment
+
+**Datasets used:** _machine_events_ and _task_events_  
+**Execution scope:**
+
+- _machine_events_: whole dataset (single file `part-00000-of-00001.csv`)
+- _task_events_: data subset (parts 180–184)
+
+In this analysis, we study how often machines in the cluster are **over-committed**, i.e., situations where the total CPU resources requested by running tasks exceed the CPU capacity available on a machine.
+
+Using the _machine_events_ dataset, we reconstructed the **CPU capacity timeline** of each machine over time. From the _task_events_ dataset, we reconstructed the **CPU demand timeline** by interpreting task scheduling and termination events as changes in requested CPU.
+
+For a given machine $m$, let:
+
+- $C_m(t)$ be the CPU capacity of machine $m$ at time $t$,
+- $D_m(t)$ be the total CPU demand on machine $m$ at time $t$, computed as the sum of CPU requests of all tasks running on that machine at time $t$.
+
+A machine is considered **over-committed** at time $t$ if:
+
+```math
+D_m(t) > C_m(t)
+```
+
+For each machine $m$, we compute the fraction of time during which it is over-committed as:
+
+```math
+\text{OvercommitFraction}_m =
+\frac{
+\int \mathbf{1}_{\{D_m(t) > C_m(t)\}} \, dt
+}{
+\int dt
+}
+```
+
+where $\mathbf{1}_{{D_m(t) > C_m(t)}}$ is an indicator function equal to 1 when the machine is over-committed and 0 otherwise.
+
+In practice, since events are discrete, this integral is approximated by summing over consecutive time intervals between events.
+
+To obtain a global measure for the cluster, we compute the average overcommitment fraction across all machines:
+
+```math
+\text{AverageOvercommitment} =
+\frac{1}{|\mathcal{M}|}
+\sum_{m \in \mathcal{M}}
+\text{OvercommitFraction}_m
+```
+
+where $\mathcal{M}$ is the set of machines.
+
+Using this method, we obtained:
+
+```math
+\text{AverageOvercommitment} \approx 0.00034
+```
+
+This means that machines are over-committed for approximately **0.034% of the time**, indicating that CPU overcommitment is a **very rare event** in the observed data.
+
+This result suggests that the cluster scheduler adopts a conservative approach with respect to CPU allocation, likely relying on task eviction, priority handling, and dynamic resource sharing to manage contention rather than allowing sustained overcommitment.

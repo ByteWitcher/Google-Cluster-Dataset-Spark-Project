@@ -10,7 +10,6 @@ from pyspark import SparkContext
 # 4,CPUs,FLOAT,NO
 # 5,Memory,FLOAT,NO
 
-
 # For each line of the input file, return a tuple (time, machine ID, event type, CPUs)
 def parseLine(line):
     # Split the line by commas and strip whitespace
