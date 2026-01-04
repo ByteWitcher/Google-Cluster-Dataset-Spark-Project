@@ -84,7 +84,7 @@ cpu_values = [x[0] for x in lost_cpu_time_by_cpu_capacity]
 lost_percentages = [x[1] for x in lost_cpu_time_by_cpu_capacity]
 
 # Create directory if it does not exist
-os.makedirs("./src/question_3/plots", exist_ok=True)
+os.makedirs("./src/analysis_3/plots", exist_ok=True)
 
 # Plot results
 x_pos = range(len(cpu_values))
@@ -99,4 +99,4 @@ plt.title("Percentage of Lost CPU Time by CPU Capacity")
 
 plt.grid(axis="y", linestyle="--", alpha=0.6)
 plt.tight_layout()
-plt.savefig("./src/question_3/plots/lost_cpu_time_percentage.png", dpi=300)
+plt.savefig("./src/analysis_3/plots/lost_cpu_time_percentage.png", dpi=300)

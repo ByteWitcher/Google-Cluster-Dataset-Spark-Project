@@ -127,14 +127,14 @@ overestimation_by_class = (
 # Print results
 print("CPU Overestimation Ratio by Scheduling Class:")
 for cls, ratio in overestimation_by_class:
-    print(f"Scheduling class {cls}: {ratio:.2f}x")
+    print(f"Scheduling class {cls}: {ratio:.2f}")
 
 
 classes = [x[0] for x in overestimation_by_class]
 ratios = [x[1] for x in overestimation_by_class]
 
 # Create directory if it does not exist
-os.makedirs("./src/question_11/plots", exist_ok=True)
+os.makedirs("./src/analysis_11/plots", exist_ok=True)
 
 # Plot results
 plt.figure(figsize=(8, 5))
@@ -146,4 +146,4 @@ plt.title("CPU Request Overestimation by Scheduling Class")
 plt.xticks(classes, [int(c) for c in classes]) 
 plt.grid(axis="y", linestyle="--", alpha=0.6)
 plt.tight_layout()
-plt.savefig("./src/question_11/plots/cpu_overestimation_by_class.png", dpi=300)
+plt.savefig("./src/analysis_11/plots/cpu_overestimation_by_class.png", dpi=300)

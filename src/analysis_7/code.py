@@ -61,7 +61,7 @@ x = [x[0] for x in machines_distribution]
 y = [x[1] for x in machines_distribution]
 
 # Create directory if it does not exist
-os.makedirs("./src/question_7/plots", exist_ok=True)
+os.makedirs("./src/analysis_7/plots", exist_ok=True)
 
 # Plot results
 plt.figure(figsize=(9, 5))
@@ -75,4 +75,4 @@ plt.yscale("log")  # VERY IMPORTANT (distribution is heavy-tailed)
 plt.grid(axis='y', linestyle='--', alpha=0.6)
 
 plt.tight_layout()
-plt.savefig("./src/question_7/plots/machines_per_job.png", dpi=300)
+plt.savefig("./src/analysis_7/plots/machines_per_job.png", dpi=300)

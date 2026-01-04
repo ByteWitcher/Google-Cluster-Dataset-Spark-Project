@@ -104,7 +104,7 @@ task_results = task_count_per_scheduling_class.sortByKey().collect()
 task_percentages = [x[1] for x in task_results]
 
 # Create directory if it does not exist
-os.makedirs("./src/question_4/plots", exist_ok=True)
+os.makedirs("./src/analysis_4/plots", exist_ok=True)
 
 # Plot results
 x = np.arange(len(scheduling_classes))
@@ -124,4 +124,4 @@ plt.legend()
 plt.grid(axis="y", linestyle="--", alpha=0.6)
 
 plt.tight_layout()
-plt.savefig("./src/question_4/plots/jobs_vs_tasks_per_class.png", dpi=300)
+plt.savefig("./src/analysis_4/plots/jobs_vs_tasks_per_class.png", dpi=300)

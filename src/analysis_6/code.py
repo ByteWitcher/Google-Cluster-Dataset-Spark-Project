@@ -1,3 +1,5 @@
+import os
+import matplotlib.pyplot as plt
 from pyspark import SparkContext
 
 # Task Events
@@ -58,3 +60,23 @@ eviction_probability_per_scheduling_class = evicted_task_count_per_scheduling_cl
 # Print the results
 for scheduling_class, eviction_probability in sorted(eviction_probability_per_scheduling_class.collect()):
     print(f"Scheduling Class {scheduling_class}: Eviction Probability = {eviction_probability:.2f}%")
+
+results = sorted(eviction_probability_per_scheduling_class.collect())
+classes = [x[0] for x in results]
+probabilities = [x[1] for x in results]
+
+# Create directory if it does not exist
+os.makedirs("./src/analysis_6/plots", exist_ok=True)
+
+# Plot results
+plt.figure(figsize=(7, 5))
+plt.bar(classes, probabilities, width=0.6)
+
+plt.xlabel("Scheduling class")
+plt.ylabel("Eviction probability (%)")
+plt.title("Eviction Probability by Scheduling Class")
+
+plt.xticks(classes)
+plt.grid(axis="y", linestyle="--", alpha=0.6)
+plt.tight_layout()
+plt.savefig("./src/analysis_6/plots/eviction_probability_by_scheduling_class.png", dpi=300)

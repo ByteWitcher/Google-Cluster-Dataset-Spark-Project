@@ -1,3 +1,5 @@
+import os
+import matplotlib.pyplot as plt
 from pyspark import SparkContext
 
 # Job Events
@@ -64,7 +66,7 @@ parsed_job_events = (
     job_events.map(parseJobEventLine).filter(lambda x: x is not None).distinct()
 )
 parsed_task_events = (
-    task_events.map(parseTaskLine).filter(lambda x: x is not None).distinct()
+    task_events.map(parseTaskEventLine).filter(lambda x: x is not None).distinct()
 )
 
 # Count the total number of unique jobs and the number of unique jobs that were evicted or killed
@@ -102,3 +104,23 @@ print(f"Total unique tasks: {total_tasks}")
 print(
     f"Total unique tasks evicted or killed: {total_evicted_or_killed_tasks} ({total_evicted_or_killed_tasks_percentage:.2f}%)"
 )
+
+labels = ["Jobs", "Tasks"]
+percentages = [
+    total_evicted_or_killed_jobs_percentage,
+    total_evicted_or_killed_tasks_percentage
+]
+
+# Create directory if it does not exist
+os.makedirs("./src/analysis_5/plots", exist_ok=True)
+
+# Plot results
+plt.figure(figsize=(6, 5))
+plt.bar(labels, percentages, width=0.6)
+
+plt.ylabel("Percentage evicted or killed (%)")
+plt.title("Percentage of Jobs and Tasks Evicted or Killed")
+
+plt.grid(axis="y", linestyle="--", alpha=0.6)
+plt.tight_layout()
+plt.savefig("./src/analysis_5/plots/evicted_killed_jobs_tasks.png", dpi=300)

@@ -62,7 +62,7 @@ cpu_values = [x[0] for x in cpu_distribution]
 cpu_counts = [x[1] for x in cpu_distribution]
 
 # Create directory if it does not exist
-os.makedirs("./src/question_1/plots", exist_ok=True)
+os.makedirs("./src/analysis_1/plots", exist_ok=True)
 
 # Plot results
 x_pos = range(len(cpu_values))
@@ -77,4 +77,4 @@ plt.title("Distribution of Machine CPU Capacities")
 
 plt.grid(axis="y", linestyle="--", alpha=0.6)
 plt.tight_layout()
-plt.savefig("./src/question_1/plots/cpu_capacity_distribution.png", dpi=300)
+plt.savefig("./src/analysis_1/plots/cpu_capacity_distribution.png", dpi=300)

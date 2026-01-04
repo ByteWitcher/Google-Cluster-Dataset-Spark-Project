@@ -39,23 +39,22 @@ from pyspark import SparkContext
 # 18,aggregation type,BOOLEAN,NO
 # 19,sampled CPU usage,FLOAT,NO
 
-# For each line of the input file, return a tuple (job ID, task index, machine ID, event type)
+# For each line of the input file, return a tuple (job ID, task index, CPU request)
 def parseTaskEventLine(line):
     # Split the line by commas and strip whitespace
     splitLine = [x.strip() for x in line.split(",")]
 
-    # Skip rows with missing machine ID value
-    if splitLine[4] == "":
+    # Skip rows with missing CPU request value
+    if splitLine[9] == "":
         return None
 
     return (
         int(splitLine[2]),
         int(splitLine[3]),
-        int(splitLine[4]),
-        int(splitLine[5]),
+        float(splitLine[9]),
     )
 
-# For each line of the input file, return a tuple (machine ID, CPU rate)
+# For each line of the input file, return a tuple (job ID, task index, CPU rate)
 def parseTaskUsageLine(line):
     # Split the line by commas and strip whitespace
     splitLine = [x.strip() for x in line.split(",")]
@@ -65,7 +64,8 @@ def parseTaskUsageLine(line):
         return None
 
     return (
-        int(splitLine[4]),
+        int(splitLine[2]),
+        int(splitLine[3]),
         float(splitLine[5]),
     )
 
@@ -79,46 +79,50 @@ sc.setLogLevel("ERROR")
 task_events = sc.textFile("./data/task_events/part-0018*-of-00500.csv")
 task_usages = sc.textFile("./data/task_usage/part-0018*-of-00500.csv")
 
-# Parse each line
+# Parse each line to get ( (job ID, task index), CPU request ) for task events
 parsed_task_events = (
-    task_events.map(parseTaskEventLine).filter(lambda x: x is not None and x[3] == 2).map(lambda x: (x[2],1))
+    task_events.map(parseTaskEventLine).filter(lambda x: x is not None).map(lambda x: ((x[0], x[1]), x[2]))
 )
+
+# Parse each line to get ( (job ID, task index), CPU rate ) for task usages
 parsed_task_usages = (
-    task_usages.map(parseTaskUsageLine).filter(lambda x: x is not None)
+    task_usages.map(parseTaskUsageLine).filter(lambda x: x is not None) .map(lambda x: ((x[0], x[1]), x[2]))
 )
 
-# Count evicted tasks per machine
-evicted_task_count_per_machine = parsed_task_events.reduceByKey(lambda x, y: x + y)
+# Keep the maximum CPU rate observed for each (job ID, task index)
+task_requests = (
+    parsed_task_events.reduceByKey(lambda x, y: x if x > y else y) 
+)
 
-# Average CPU usage per machine
-mean_cpu_usage_per_machine = (
+# Compute the mean CPU usage for each (job ID, task index)
+task_usages = (
     parsed_task_usages
     .mapValues(lambda x: (x, 1))
-    .reduceByKey(lambda a, b: (a[0] + b[0], a[1] + b[1]))
-    .mapValues(lambda x: x[0] / x[1])  
+    .reduceByKey(lambda x, y: (x[0] + y[0], x[1] + y[1]))
+    .mapValues(lambda x: x[0] / x[1])
 )
 
-# Join the two RDDs to get (machine_id, (mean_cpu_usage, evicted_task_count))
-cpu_vs_evictions = (
-    mean_cpu_usage_per_machine
-    .join(evicted_task_count_per_machine)   # (machine_id, (cpu_usage, evictions))
-    .map(lambda x: x[1]).collect()
+# Join the requested and used CPU for each (job ID, task index)
+request_vs_usage = (
+    task_requests
+    .join(task_usages)   # ((job, task), (requested, used))
+    .map(lambda x: (x[1][0], x[1][1])).collect()
 )
 
-cpu = [x[0] for x in cpu_vs_evictions]
-evictions = [x[1] for x in cpu_vs_evictions]
+x = [x[0] for x in request_vs_usage]
+y = [x[1] for x in request_vs_usage]
 
 # Create directory if it does not exist
-os.makedirs("./src/question_9/plots", exist_ok=True)
+os.makedirs("./src/analysis_8/plots", exist_ok=True)
 
 # Plot results
 plt.figure(figsize=(8, 6))
-plt.scatter(cpu, evictions, alpha=0.5, s=10)
+plt.scatter(x, y, alpha=0.4, s=10)
 
-plt.xlabel("Mean CPU usage per machine")
-plt.ylabel("Number of eviction events")
-plt.title("CPU usage vs task evictions per machine")
+plt.xlabel("Requested CPU (normalized)")
+plt.ylabel("Mean CPU usage (cores)")
+plt.title("Requested CPU vs Actual CPU Usage per Task")
 
 plt.grid(True, linestyle="--", alpha=0.5)
 plt.tight_layout()
-plt.savefig("./src/question_9/plots/cpu_vs_evictions.png", dpi=300)
+plt.savefig("./src/analysis_8/plots/cpu_request_vs_usage.png", dpi=300)
